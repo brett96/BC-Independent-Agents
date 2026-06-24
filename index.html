@@ -310,7 +310,7 @@
             <path d="M35 35 l7 2.6 v3.8 c0 4.6 -3.7 7 -7 8.2 c-3.3 -1.2 -7 -3.6 -7 -8.2 v-3.8z" fill="none" stroke="#fff" stroke-width="1.4" stroke-linejoin="round"/>
             <path d="M32 41 l2 2 3.5 -3.6" fill="none" stroke="#fff" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
             <text x="52" y="46" font-family="Fraunces,serif" font-size="14.5" font-weight="600" fill="#157e5d">BookCover</text>
-            <text x="240" y="45" text-anchor="end" font-family="DM Sans,sans-serif" font-size="9" fill="#7B8C82">the platform</text>
+            <text x="292" y="48" text-anchor="end" font-family="DM Sans,sans-serif" font-size="9" fill="#7B8C82">the platform</text>
           </g>
 
           <!-- the two apps live INSIDE BookCover -->
@@ -329,9 +329,12 @@
           </g>
 
           <!-- member info flows down into the filter -->
-          <text x="163" y="115" text-anchor="middle" font-family="DM Sans,sans-serif" font-size="8.5" fill="#7B8C82">member docs · details · questions</text>
-          <path d="M92 102 V 124" fill="none" stroke="#1d9e75" stroke-width="2" marker-end="url(#ah)"/>
-          <path d="M234 102 V 124" fill="none" stroke="#1d9e75" stroke-width="2" marker-end="url(#ah)"/>
+          <path d="M92 102 V 108" fill="none" stroke="#1d9e75" stroke-width="2"/>
+          <path d="M92 116 V 124" fill="none" stroke="#1d9e75" stroke-width="2" marker-end="url(#ah)"/>
+          <path d="M234 102 V 108" fill="none" stroke="#1d9e75" stroke-width="2"/>
+          <path d="M234 116 V 124" fill="none" stroke="#1d9e75" stroke-width="2" marker-end="url(#ah)"/>
+          <rect x="96" y="106" width="134" height="16" rx="8" fill="#F6FBF8" stroke="#e2eae3"/>
+          <text x="163" y="117" text-anchor="middle" font-family="DM Sans,sans-serif" font-size="8.5" fill="#5a6b62">member docs · details · questions</text>
 
           <!-- ===== PII FILTER — the prominent centerpiece ===== -->
           <rect x="24" y="124" width="278" height="98" rx="15" fill="#E7F5EE" stroke="#1d9e75" stroke-width="3"/>
@@ -339,35 +342,37 @@
           <path d="M52 139 l7 2.6 v3.8 c0 4.6 -3.7 7 -7 8.2 c-3.3 -1.2 -7 -3.6 -7 -8.2 v-3.8z" fill="none" stroke="#fff" stroke-width="1.5" stroke-linejoin="round"/>
           <path d="M49 145 l2 2 3.5 -3.6" fill="none" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
           <text x="68" y="152" font-family="DM Sans,sans-serif" font-size="13" font-weight="700" fill="#fff">PII FILTER</text>
-          <text x="196" y="152" font-family="DM Sans,sans-serif" font-size="9" font-weight="600" fill="#157e5d">removes names · IDs · PHI</text>
+          <text x="196" y="151" font-family="DM Sans,sans-serif" font-size="9" font-weight="600" fill="#157e5d">removes names · IDs · PHI</text>
 
-          <rect x="38" y="176" width="106" height="36" rx="9" fill="#fff" stroke="#e6c4c4"/>
-          <text x="48" y="192" font-family="DM Sans,sans-serif" font-size="9.5" font-weight="600" fill="#b05a5a">Jane Doe</text>
-          <text x="48" y="204" font-family="DM Sans,sans-serif" font-size="8" fill="#a98080">MBI 1EG4-TE5-MK72</text>
-          <path d="M150 194 H 176" fill="none" stroke="#1d9e75" stroke-width="2.2" marker-end="url(#ah)"/>
-          <rect x="182" y="176" width="106" height="36" rx="9" fill="#fff" stroke="#c9e6d8"/>
-          <path d="M193 193 l3 3 5 -5.5" fill="none" stroke="#1d9e75" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-          <text x="207" y="192" font-family="DM Sans,sans-serif" font-size="9.5" font-weight="600" fill="#157e5d">[member]</text>
-          <text x="192" y="204" font-family="DM Sans,sans-serif" font-size="8" fill="#6f9384">cleaned &amp; de-identified</text>
+          <rect x="38" y="182" width="106" height="36" rx="9" fill="#fff" stroke="#e6c4c4"/>
+          <text x="48" y="198" font-family="DM Sans,sans-serif" font-size="9.5" font-weight="600" fill="#b05a5a">Jane Doe</text>
+          <text x="48" y="210" font-family="DM Sans,sans-serif" font-size="8" fill="#a98080">MBI 1EG4-TE5-MK72</text>
+          <path d="M150 200 H 176" fill="none" stroke="#1d9e75" stroke-width="2.2" marker-end="url(#ah)"/>
+          <rect x="182" y="182" width="106" height="36" rx="9" fill="#fff" stroke="#c9e6d8"/>
+          <path d="M193 199 l3 3 5 -5.5" fill="none" stroke="#1d9e75" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          <text x="207" y="198" font-family="DM Sans,sans-serif" font-size="9.5" font-weight="600" fill="#157e5d">[member]</text>
+          <text x="192" y="210" font-family="DM Sans,sans-serif" font-size="8" fill="#6f9384">cleaned &amp; de-identified</text>
 
           <!-- ===== only cleaned data leaves BookCover -> Claude ===== -->
-          <text x="356" y="146" text-anchor="middle" font-family="DM Sans,sans-serif" font-size="9" font-weight="700" fill="#157e5d">only clean data</text>
-          <text x="356" y="157" text-anchor="middle" font-family="DM Sans,sans-serif" font-size="9" font-weight="700" fill="#157e5d">leaves BookCover</text>
-          <path d="M302 174 H 392" fill="none" stroke="url(#gFlow)" stroke-width="3.2" marker-end="url(#ahg)" class="flow"/>
-          <g>
-            <rect x="305" y="179" width="16" height="13" rx="3" fill="#fff" stroke="#1d9e75" stroke-width="1.5"/>
-            <path d="M308 179 v-2.5 a5 5 0 0 1 10 0 v2.5" fill="none" stroke="#1d9e75" stroke-width="1.5"/>
+          <rect x="318" y="156" width="76" height="26" rx="8" fill="#fff" stroke="#e2eae3"/>
+          <text x="356" y="166" text-anchor="middle" font-family="DM Sans,sans-serif" font-size="8.5" font-weight="700" fill="#157e5d">only clean data</text>
+          <text x="356" y="176" text-anchor="middle" font-family="DM Sans,sans-serif" font-size="8.5" font-weight="700" fill="#157e5d">leaves BookCover</text>
+          <path d="M302 200 H 392" fill="none" stroke="url(#gFlow)" stroke-width="3.2" marker-end="url(#ahg)" class="flow"/>
+          <g transform="translate(338,192)">
+            <rect x="0" y="0" width="16" height="13" rx="3" fill="#fff" stroke="#1d9e75" stroke-width="1.5"/>
+            <path d="M3 0 v-2.5 a5 5 0 0 1 10 0 v2.5" fill="none" stroke="#1d9e75" stroke-width="1.5"/>
           </g>
 
           <!-- Claude (external) -->
-          <rect x="392" y="154" width="60" height="44" rx="13" fill="#15261E"/>
-          <path d="M404 170 l2 4.6 4.6 2 -4.6 2 -2 4.6 -2 -4.6 -4.6 -2 4.6 -2z" fill="#28c08e"/>
-          <text x="426" y="180" text-anchor="middle" font-family="Fraunces,serif" font-size="13" font-weight="600" fill="#fff">Claude</text>
-          <text x="422" y="210" text-anchor="middle" font-family="DM Sans,sans-serif" font-size="8" fill="#9aa">external model</text>
+          <rect x="392" y="178" width="60" height="44" rx="13" fill="#15261E"/>
+          <path d="M404 194 l2 4.6 4.6 2 -4.6 2 -2 4.6 -2 -4.6 -4.6 -2 4.6 -2z" fill="#28c08e"/>
+          <text x="422" y="204" text-anchor="middle" font-family="Fraunces,serif" font-size="13" font-weight="600" fill="#fff">Claude</text>
+          <text x="422" y="236" text-anchor="middle" font-family="DM Sans,sans-serif" font-size="8" fill="#9aa">external model</text>
 
           <!-- answers return into BookCover -->
-          <path d="M422 198 V 240 H 316" fill="none" stroke="#b9c7bd" stroke-width="2" stroke-dasharray="3 5" marker-end="url(#ahl)"/>
-          <text x="368" y="234" text-anchor="middle" font-family="DM Sans,sans-serif" font-size="8.5" fill="#7B8C82">answers return to your apps</text>
+          <path d="M422 222 V 256 H 316" fill="none" stroke="#b9c7bd" stroke-width="2" stroke-dasharray="3 5" marker-end="url(#ahl)"/>
+          <rect x="318" y="258" width="108" height="14" rx="7" fill="#fff" stroke="#e2eae3"/>
+          <text x="372" y="268" text-anchor="middle" font-family="DM Sans,sans-serif" font-size="8.5" fill="#5a6b62">answers return to your apps</text>
 
           <!-- ===== BAA CHAIN OF TRUST (contractual layer) ===== -->
           <line x1="10" y1="280" x2="450" y2="280" stroke="#e2eae3" stroke-width="1"/>
@@ -375,29 +380,29 @@
 
           <!-- three parties -->
           <g font-family="DM Sans,sans-serif">
-            <rect x="14" y="312" width="118" height="40" rx="11" fill="#fff" stroke="#cbe7da"/>
+            <rect x="14" y="310" width="118" height="48" rx="11" fill="#fff" stroke="#cbe7da"/>
             <text x="73" y="330" text-anchor="middle" font-size="11.5" font-weight="600" fill="#157e5d">Agent</text>
-            <text x="73" y="343" text-anchor="middle" font-size="8.5" fill="#7B8C82">your practice · client</text>
+            <text x="73" y="346" text-anchor="middle" font-size="8.5" fill="#7B8C82">your practice · client</text>
 
-            <rect x="171" y="312" width="118" height="40" rx="11" fill="#E7F5EE" stroke="#1d9e75" stroke-width="1.4"/>
+            <rect x="171" y="310" width="118" height="48" rx="11" fill="#E7F5EE" stroke="#1d9e75" stroke-width="1.4"/>
             <text x="230" y="330" text-anchor="middle" font-size="11.5" font-weight="700" fill="#157e5d">BookCover</text>
-            <text x="230" y="343" text-anchor="middle" font-size="8.5" fill="#6f9384">business associate</text>
+            <text x="230" y="346" text-anchor="middle" font-size="8.5" fill="#6f9384">business associate</text>
 
-            <rect x="328" y="312" width="118" height="40" rx="11" fill="#15261E"/>
+            <rect x="328" y="310" width="118" height="48" rx="11" fill="#15261E"/>
             <text x="387" y="330" text-anchor="middle" font-size="11.5" font-weight="600" fill="#fff">Anthropic</text>
-            <text x="387" y="343" text-anchor="middle" font-size="8.5" fill="#9aa">Claude · subprocessor</text>
+            <text x="387" y="346" text-anchor="middle" font-size="8.5" fill="#9aa">Claude · subprocessor</text>
           </g>
 
           <!-- connecting links + BAA seals -->
-          <line x1="132" y1="332" x2="171" y2="332" stroke="#1d9e75" stroke-width="2"/>
-          <line x1="289" y1="332" x2="328" y2="332" stroke="#1d9e75" stroke-width="2"/>
+          <line x1="132" y1="334" x2="171" y2="334" stroke="#1d9e75" stroke-width="2"/>
+          <line x1="289" y1="334" x2="328" y2="334" stroke="#1d9e75" stroke-width="2"/>
           <g>
-            <circle cx="151.5" cy="332" r="13" fill="#fff" stroke="#1d9e75" stroke-width="1.6"/>
-            <text x="151.5" y="335.5" text-anchor="middle" font-family="DM Sans,sans-serif" font-size="8.5" font-weight="700" fill="#157e5d">BAA</text>
+            <circle cx="151.5" cy="334" r="13" fill="#fff" stroke="#1d9e75" stroke-width="1.6"/>
+            <text x="151.5" y="337.5" text-anchor="middle" font-family="DM Sans,sans-serif" font-size="8.5" font-weight="700" fill="#157e5d">BAA</text>
           </g>
           <g>
-            <circle cx="308.5" cy="332" r="13" fill="#fff" stroke="#1d9e75" stroke-width="1.6"/>
-            <text x="308.5" y="335.5" text-anchor="middle" font-family="DM Sans,sans-serif" font-size="8.5" font-weight="700" fill="#157e5d">BAA</text>
+            <circle cx="308.5" cy="334" r="13" fill="#fff" stroke="#1d9e75" stroke-width="1.6"/>
+            <text x="308.5" y="337.5" text-anchor="middle" font-family="DM Sans,sans-serif" font-size="8.5" font-weight="700" fill="#157e5d">BAA</text>
           </g>
 
           <text x="230" y="368" text-anchor="middle" font-family="DM Sans,sans-serif" font-size="9" fill="#46594F">A Business Associate Agreement at every link — so the agent stays HIPAA-compliant.</text>
