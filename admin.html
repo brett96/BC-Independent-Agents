@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BookCover Admin</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/admin.css">
+</head>
+<body>
+<div id="app"><p class="empty">Loading…</p></div>
+
+<script>
+const app = document.getElementById('app');
+
+const PRODUCT_OPTIONS = [
+  { value: 'all', label: 'All products' },
+  { value: 'independent-agents', label: 'Independent Agents' },
+  { value: 'bookcover-landing', label: 'BookCover Landing' },
+  { value: 'member-demo', label: 'Member Demo (standalone)' },
+  { value: 'agent-demo', label: 'Agent Demo (standalone)' },
+  { value: 'legacy', label: 'Legacy (no product tag)' },
+];
+
+const SITE_OPTIONS = [
+  { value: 'all', label: 'All sites' },
+  { value: 'landing', label: 'Landing page' },
+  { value: 'member', label: 'Member demo' },
+  { value: 'agent', label: 'Agent demo' },
+];
+
+let state = {
+  tab: 'analytics',
+  authenticated: false,
+  adminEmail: null,
+  configured: true,
+  period: '24h',
+  product: 'all',
+  site: 'all',
+  filterLabel: 'All products and sites',
+  productLabels: {},
+  summary: null,
+  periodLabel: 'Last 24 hours',
+  recent: [],
+  analyticsBusy: false,
+  recipientsText: '',
+  excludedIpsText: '',
+  excludedCitiesText: '',
+  configMeta: '',
+  saveMessage: '',
+  previewHtml: '',
+  previewSummary: null,
+  previewBusy: false,
+  saveBusy: false,
+  loginEmail: '',
+  loginPassword: '',
+  loginError: '',
+  loginBusy: false,
+};
+
+function listToText(values) { return values.join('\n'); }
+function textToList(raw) {
+  return raw.split(/[\n,;]+/).map(s => s.trim()).filter(Boolean);
+}
+function eventPillClass(type) {
+  if (type === 'registration') return 'ev-pill reg';
+  if (type === 'login') return 'ev-pill login';
+  if (type === 'demo_launch') return 'ev-pill demo';
+  return 'ev-pill';
+}
+function esc(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function productLabel(slug) {
+  return state.productLabels[slug] || PRODUCT_OPTIONS.find(o => o.value === slug)?.label || slug;
+}
+
+function siteLabel(slug) {
+  return SITE_OPTIONS.find(o => o.value === slug)?.label || slug;
+}
+
+function analyticsQuery(extra = {}) {
+  const params = new URLSearchParams({ period: state.period, ...extra });
+  if (state.product !== 'all') params.set('product', state.product);
+  if (state.site !== 'all') params.set('site', state.site);
+  return params.toString();
+}
+
+async function api(path, opts = {}) {
+  const res = await fetch(path, { credentials: 'include', ...opts });
+  const data = await res.json().catch(() => ({}));
+  return { res, data };
+}
+
+async function refreshSession() {
+  const { data } = await api('/api/admin/session');
+  state.authenticated = !!data.authenticated;
+  state.adminEmail = data.email ?? null;
+  state.configured = data.configured !== false;
+  return state.authenticated;
+}
+
+async function loadAnalytics() {
+  state.analyticsBusy = true;
+  render();
+  try {
+    const { res, data } = await api(`/api/admin/analytics?${analyticsQuery()}`);
+    if (res.ok) {
+      state.summary = data.summary;
+      state.periodLabel = data.period?.label ?? '';
+      state.recent = data.recent ?? [];
+      state.filterLabel = data.filters?.label ?? state.filterLabel;
+      state.productLabels = data.products?.labels ?? {};
+    }
+  } finally {
+    state.analyticsBusy = false;
+    render();
+  }
+}
+
+async function loadReportConfig() {
+  const { res, data } = await api('/api/admin/report-config');
+  if (!res.ok) return;
+  const cfg = data.config;
+  state.recipientsText = listToText(cfg.emailRecipients || []);
+  state.excludedIpsText = listToText(cfg.excludedIps || []);
+  state.excludedCitiesText = listToText(cfg.excludedCities || []);
+  if (cfg.updatedAt) {
+    state.configMeta = `Last saved ${new Date(cfg.updatedAt).toLocaleString()}${cfg.updatedBy ? ` by ${cfg.updatedBy}` : ''}`;
+  }
+}
+
+async function loadPreview(draft = false) {
+  state.previewBusy = true;
+  render();
+  try {
+    const params = new URLSearchParams(analyticsQuery());
+    if (draft) {
+      params.set('draft', '1');
+      params.set('recipients', textToList(state.recipientsText).join(','));
+      params.set('excludedIps', textToList(state.excludedIpsText).join(','));
+      params.set('excludedCities', textToList(state.excludedCitiesText).join(','));
+    }
+    const { res, data } = await api(`/api/admin/report-preview?${params}`);
+    if (res.ok) {
+      state.previewHtml = data.html ?? '';
+      state.previewSummary = data.summary ?? null;
+    }
+  } finally {
+    state.previewBusy = false;
+    render();
+  }
+}
+
+async function handleLogin(e) {
+  e.preventDefault();
+  state.loginError = '';
+  state.loginBusy = true;
+  render();
+  try {
+    const { res, data } = await api('/api/admin/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: state.loginEmail, password: state.loginPassword }),
+    });
+    if (!res.ok) {
+      state.loginError = data.error ?? 'Login failed';
+      return;
+    }
+    state.loginPassword = '';
+    await refreshSession();
+    await loadAnalytics();
+    await loadReportConfig();
+  } finally {
+    state.loginBusy = false;
+    render();
+  }
+}
+
+async function handleLogout() {
+  await api('/api/admin/logout', { method: 'POST' });
+  state.authenticated = false;
+  state.adminEmail = null;
+  state.summary = null;
+  state.recent = [];
+  state.previewHtml = '';
+  render();
+}
+
+async function handleSaveConfig() {
+  state.saveMessage = '';
+  state.saveBusy = true;
+  render();
+  try {
+    const { res, data } = await api('/api/admin/report-config', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        emailRecipients: textToList(state.recipientsText),
+        excludedIps: textToList(state.excludedIpsText),
+        excludedCities: textToList(state.excludedCitiesText),
+      }),
+    });
+    if (!res.ok) {
+      state.saveMessage = data.error ?? 'Failed to save';
+      return;
+    }
+    state.saveMessage = 'Settings saved.';
+    const cfg = data.config;
+    if (cfg.updatedAt) {
+      state.configMeta = `Last saved ${new Date(cfg.updatedAt).toLocaleString()}${cfg.updatedBy ? ` by ${cfg.updatedBy}` : ''}`;
+    }
+    await loadAnalytics();
+    await loadPreview(true);
+  } finally {
+    state.saveBusy = false;
+    render();
+  }
+}
+
+function switchTab(next) {
+  state.tab = next;
+  if (next === 'report') loadPreview(true);
+  else render();
+}
+
+function renderLogin() {
+  app.innerHTML = `
+    <div class="admin-page">
+      <div class="admin-inner admin-login-wrap">
+        <div class="admin-login-card">
+          <div class="admin-login-mark">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>
+          </div>
+          <h1>BookCover Admin</h1>
+          <p>Sign in to view analytics and configure daily reports.</p>
+          <form id="loginForm">
+            ${state.loginError ? `<div class="m-error show">${esc(state.loginError)}</div>` : ''}
+            <div class="field">
+              <label>Email</label>
+              <input type="email" id="loginEmail" value="${esc(state.loginEmail)}" placeholder="admin@cercalabs.com" autocomplete="username" required>
+            </div>
+            <div class="field">
+              <label>Password</label>
+              <input type="password" id="loginPassword" autocomplete="current-password" required>
+            </div>
+            <button type="submit" class="btn-p full-btn" ${state.loginBusy ? 'disabled' : ''}>${state.loginBusy ? 'Signing in…' : 'Sign in'}</button>
+          </form>
+        </div>
+      </div>
+    </div>`;
+  document.getElementById('loginForm').onsubmit = handleLogin;
+  document.getElementById('loginEmail').oninput = e => { state.loginEmail = e.target.value; };
+}
+
+function renderGate() {
+  app.innerHTML = `
+    <div class="admin-page">
+      <div class="admin-inner">
+        <div class="admin-gate">
+          <h1>Admin not configured</h1>
+          <p>Set <code>ADMIN_SEED_EMAIL</code> and <code>ADMIN_SEED_PASSWORD</code> in your Vercel environment.</p>
+        </div>
+      </div>
+    </div>`;
+}
+
+function renderAnalytics() {
+  const s = state.summary;
+  if (!s) return '<p class="empty">No data yet.</p>';
+  const byProduct = Object.entries(s.byProduct || {}).map(([product, count]) =>
+    `<tr><td>${esc(productLabel(product))}</td><td>${count}</td></tr>`).join('') ||
+    '<tr><td colspan="2" class="empty">No events</td></tr>';
+  const bySite = Object.entries(s.bySite).map(([site, count]) =>
+    `<tr><td>${esc(siteLabel(site))}</td><td>${count}</td></tr>`).join('') ||
+    '<tr><td colspan="2" class="empty">No events</td></tr>';
+  const byType = Object.entries(s.byType).map(([type, count]) =>
+    `<tr><td><span class="${eventPillClass(type)}">${esc(type)}</span></td><td>${count}</td></tr>`).join('') ||
+    '<tr><td colspan="2" class="empty">No events</td></tr>';
+  const recent = state.recent.map(ev => `
+    <tr>
+      <td>${ev.occurredAt ? new Date(ev.occurredAt).toLocaleString() : '—'}</td>
+      <td>${esc(productLabel(ev.product || 'legacy'))}</td>
+      <td>${esc(siteLabel(ev.site))}</td>
+      <td><span class="${eventPillClass(ev.eventType)}">${esc(ev.eventType)}</span></td>
+      <td>${esc(ev.path || '—')}</td>
+      <td>${esc(ev.email || '—')}</td>
+      <td>${esc(ev.ip || '—')}</td>
+      <td>${esc(ev.city || '—')}</td>
+    </tr>`).join('') ||
+    '<tr><td colspan="8" class="empty">No events in this period</td></tr>';
+
+  const productOpts = PRODUCT_OPTIONS.map(o =>
+    `<option value="${o.value}"${state.product === o.value ? ' selected' : ''}>${esc(o.label)}</option>`).join('');
+  const siteOpts = SITE_OPTIONS.map(o =>
+    `<option value="${o.value}"${state.site === o.value ? ' selected' : ''}>${esc(o.label)}</option>`).join('');
+
+  return `
+    <div class="admin-toolbar admin-filters">
+      <label class="admin-period">Period
+        <select id="periodSelect">
+          <option value="24h"${state.period === '24h' ? ' selected' : ''}>Last 24 hours</option>
+          <option value="7d"${state.period === '7d' ? ' selected' : ''}>Last 7 days</option>
+          <option value="30d"${state.period === '30d' ? ' selected' : ''}>Last 30 days</option>
+        </select>
+      </label>
+      <label class="admin-period">Product
+        <select id="productSelect">${productOpts}</select>
+      </label>
+      <label class="admin-period">Site
+        <select id="siteSelect">${siteOpts}</select>
+      </label>
+      ${state.analyticsBusy ? '<span class="admin-muted">Refreshing…</span>' : ''}
+    </div>
+    <p class="admin-muted" style="margin-bottom:14px">Showing: ${esc(state.filterLabel)}</p>
+    <div class="stat-row">
+      <div class="stat-box"><div class="stat-n">${s.totalEvents}</div><div class="stat-l">Events (${esc(state.periodLabel)})</div></div>
+      <div class="stat-box"><div class="stat-n">${s.uniqueVisitors}</div><div class="stat-l">Unique visitors</div></div>
+      <div class="stat-box"><div class="stat-n">${s.registrations}</div><div class="stat-l">Registrations</div></div>
+      <div class="stat-box"><div class="stat-n">${s.demoLaunches}</div><div class="stat-l">Demo launches</div></div>
+    </div>
+    ${s.excludedEvents > 0 ? `<p class="admin-filter-note">${s.excludedEvents} event(s) excluded by IP/city filters (not shown below).</p>` : ''}
+    <div class="admin-grid-2">
+      <div>
+        <h3 class="admin-section-title">By product</h3>
+        <div class="tbl-wrap"><table><thead><tr><th>Product</th><th>Count</th></tr></thead><tbody>${byProduct}</tbody></table></div>
+      </div>
+      <div>
+        <h3 class="admin-section-title">By site</h3>
+        <div class="tbl-wrap"><table><thead><tr><th>Site</th><th>Count</th></tr></thead><tbody>${bySite}</tbody></table></div>
+      </div>
+    </div>
+    <div style="margin-top:4px">
+      <h3 class="admin-section-title">By event type</h3>
+      <div class="tbl-wrap"><table><thead><tr><th>Type</th><th>Count</th></tr></thead><tbody>${byType}</tbody></table></div>
+    </div>
+    <h3 class="admin-section-title">Recent events</h3>
+    <div class="tbl-wrap tbl-wrap-tall">
+      <table>
+        <thead><tr><th>Time</th><th>Product</th><th>Site</th><th>Event</th><th>Path</th><th>Email</th><th>IP</th><th>City</th></tr></thead>
+        <tbody>${recent}</tbody>
+      </table>
+    </div>`;
+}
+
+function renderReport() {
+  return `
+    <p class="admin-intro">Configure the daily email report sent by the Vercel cron job. Exclude traffic from specific IP addresses or cities (derived from Vercel geo headers at event time).</p>
+    <div class="admin-grid-2 admin-report-grid">
+      <div>
+        <div class="field"><label>Report recipients (one email per line)</label><textarea id="recipientsText" rows="4" placeholder="team@cercalabs.com">${esc(state.recipientsText)}</textarea></div>
+        <div class="field"><label>Excluded IP addresses (one per line)</label><textarea id="excludedIpsText" rows="4" placeholder="203.0.113.10">${esc(state.excludedIpsText)}</textarea></div>
+        <div class="field"><label>Excluded cities (one per line, case-insensitive)</label><textarea id="excludedCitiesText" rows="4" placeholder="San Francisco">${esc(state.excludedCitiesText)}</textarea></div>
+        ${state.configMeta ? `<p class="admin-muted">${esc(state.configMeta)}</p>` : ''}
+        ${state.saveMessage ? `<p class="${state.saveMessage.includes('Failed') ? 'm-error show' : 'admin-save-ok'}">${esc(state.saveMessage)}</p>` : ''}
+        <div class="admin-actions">
+          <button type="button" class="btn-o" id="previewBtn" ${state.previewBusy ? 'disabled' : ''}>${state.previewBusy ? 'Loading…' : 'Refresh preview'}</button>
+          <button type="button" class="btn-p" id="saveBtn" ${state.saveBusy ? 'disabled' : ''}>${state.saveBusy ? 'Saving…' : 'Save settings'}</button>
+        </div>
+      </div>
+      <div>
+        <h3 class="admin-section-title">Report preview (last 24 hours)</h3>
+        <p class="admin-muted">Scope: ${esc(state.filterLabel)} (uses Analytics tab filters)</p>
+        ${state.previewSummary ? `<p class="admin-muted">${state.previewSummary.totalEvents} events included${state.previewSummary.excludedEvents > 0 ? ` · ${state.previewSummary.excludedEvents} excluded` : ''}</p>` : ''}
+        <div class="admin-preview">${state.previewHtml || '<p>No data yet.</p>'}</div>
+      </div>
+    </div>`;
+}
+
+function renderDashboard() {
+  app.innerHTML = `
+    <div class="admin-page">
+      <header class="admin-header">
+        <div class="admin-header-inner">
+          <div class="admin-brand">
+            <div class="nav-mark"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg></div>
+            <div>
+              <div class="admin-title">BookCover Admin</div>
+              <div class="admin-sub">${esc(state.adminEmail || '')}</div>
+            </div>
+          </div>
+          <div class="admin-header-actions">
+            <a href="/" class="nav-link">← Landing site</a>
+            <button type="button" class="btn-o" id="logoutBtn">Sign out</button>
+          </div>
+        </div>
+      </header>
+      <div class="admin-inner">
+        <div class="admin-tabs">
+          <button type="button" class="admin-tab${state.tab === 'analytics' ? ' on' : ''}" data-tab="analytics">Analytics</button>
+          <button type="button" class="admin-tab${state.tab === 'report' ? ' on' : ''}" data-tab="report">Daily report</button>
+        </div>
+        <div class="admin-pane on">${state.tab === 'analytics' ? renderAnalytics() : renderReport()}</div>
+      </div>
+    </div>`;
+
+  document.getElementById('logoutBtn').onclick = handleLogout;
+  document.querySelectorAll('.admin-tab').forEach(btn => {
+    btn.onclick = () => switchTab(btn.dataset.tab);
+  });
+
+  const periodSelect = document.getElementById('periodSelect');
+  if (periodSelect) {
+    periodSelect.onchange = e => { state.period = e.target.value; loadAnalytics(); };
+    const productSelect = document.getElementById('productSelect');
+    if (productSelect) {
+      productSelect.onchange = e => { state.product = e.target.value; loadAnalytics(); };
+      document.getElementById('siteSelect').onchange = e => { state.site = e.target.value; loadAnalytics(); };
+    }
+  }
+
+  const recipients = document.getElementById('recipientsText');
+  if (recipients) {
+    recipients.oninput = e => { state.recipientsText = e.target.value; };
+    document.getElementById('excludedIpsText').oninput = e => { state.excludedIpsText = e.target.value; };
+    document.getElementById('excludedCitiesText').oninput = e => { state.excludedCitiesText = e.target.value; };
+    document.getElementById('previewBtn').onclick = () => loadPreview(true);
+    document.getElementById('saveBtn').onclick = handleSaveConfig;
+  }
+}
+
+function render() {
+  if (!state.configured) return renderGate();
+  if (!state.authenticated) return renderLogin();
+  renderDashboard();
+}
+
+(async () => {
+  const ok = await refreshSession();
+  if (ok) {
+    await loadAnalytics();
+    await loadReportConfig();
+  }
+  render();
+})();
+</script>
+</body>
+</html>
