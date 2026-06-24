@@ -76,19 +76,6 @@ indexHtml = indexHtml.replace(/href="\/agent"/g, 'href="/agent" data-track-demo=
 indexHtml = indexHtml.replace(/href="\/member"/g, 'href="/member" data-track-demo="member"');
 write('index.html', injectAnalytics(indexHtml, 'landing'));
 
-const demoBannerBase = `
-.demo-banner{position:fixed;top:0;left:0;right:0;z-index:100;background:#15261E;color:#fff;font-size:13px;padding:10px 16px;display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;box-shadow:0 2px 12px rgba(0,0,0,.15)}
-.demo-banner a{color:#fff;font-weight:600;text-decoration:underline;text-underline-offset:2px}
-.demo-banner a:hover{color:#a7e8d0}
-.demo-banner .sep{opacity:.35}
-body.has-demo-banner{padding-top:44px}`;
-
-const demoBannerAgent = `${demoBannerBase}
-body.has-demo-banner .app{height:calc(100dvh - 44px)}`;
-
-const demoBannerMember = `${demoBannerBase}
-body.has-demo-banner .stage{padding-top:8px}`;
-
 const demoBannerHtml = `
 <div class="demo-banner">
   <span>Interactive demo</span>
@@ -96,16 +83,50 @@ const demoBannerHtml = `
   <a href="/">← Back to BookCover</a>
 </div>`;
 
+const demoStyles = '<link rel="stylesheet" href="/demo-mobile.css">';
+
 let agentHtml = fs.readFileSync(path.join(root, 'agent-portal.html'), 'utf8');
 agentHtml = agentHtml.replace(
   '<title>BookCover — Workspace</title>',
   `<title>BookCover — Agent Workspace Demo</title>
 <meta name="description" content="Interactive demo of the BookCover agent workspace — HIPAA-safe Claude, client organization, and member inquiries.">
 <meta name="robots" content="noindex">
-<link rel="icon" href="/favicon.svg" type="image/svg+xml">`
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">${demoStyles}`
 );
-agentHtml = agentHtml.replace('</style>', `${demoBannerAgent}</style>`);
-agentHtml = agentHtml.replace('<body>', `<body class="has-demo-banner">${demoBannerHtml}`);
+agentHtml = agentHtml.replace(
+  '<div class="topbar">',
+  `<div class="topbar">
+      <button type="button" class="mob-nav" id="mobNavBtn" aria-label="Open menu" onclick="toggleMobNav()"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>`
+);
+agentHtml = agentHtml.replace(
+  '<div class="app">',
+  `<div class="mob-scrim" id="mobScrim" onclick="closeMobNav()"></div>
+<div class="app">`
+);
+agentHtml = agentHtml.replace('<body>', `<body class="has-demo-banner agent-demo">${demoBannerHtml}`);
+agentHtml = agentHtml.replace(
+  /function goHome\(\)\{/,
+  `function closeMobNav(){
+  document.querySelector('.sidecol')?.classList.remove('open');
+  document.getElementById('mobScrim')?.classList.remove('show');
+}
+function toggleMobNav(){
+  document.querySelector('.sidecol')?.classList.toggle('open');
+  document.getElementById('mobScrim')?.classList.toggle('show');
+}
+document.querySelectorAll('.s-nav .nav-i, .sidecol .s-new').forEach(function(el){
+  el.addEventListener('click',function(){ if(window.innerWidth<=900) closeMobNav(); });
+});
+function goHome(){closeMobNav();`
+);
+agentHtml = agentHtml.replace(
+  /function openClient\(id\)\{/,
+  `function openClient(id){closeMobNav();`
+);
+agentHtml = agentHtml.replace(
+  /function openConversation\(id,idx\)\{/,
+  `function openConversation(id,idx){closeMobNav();`
+);
 write('agent/index.html', injectAnalytics(agentHtml, 'agent'));
 
 let memberHtml = fs.readFileSync(path.join(root, 'member-app.html'), 'utf8');
@@ -114,10 +135,9 @@ memberHtml = memberHtml.replace(
   `<title>Your HealthPlan Helper — Member App Demo</title>
 <meta name="description" content="Interactive demo of the BookCover white-labeled member app — plan help, agent messaging, and 24/7 assistance.">
 <meta name="robots" content="noindex">
-<link rel="icon" href="/favicon.svg" type="image/svg+xml">`
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">${demoStyles}`
 );
-memberHtml = memberHtml.replace('</style>', `${demoBannerMember}</style>`);
-memberHtml = memberHtml.replace('<body>', `<body class="has-demo-banner">${demoBannerHtml}`);
+memberHtml = memberHtml.replace('<body>', `<body class="has-demo-banner member-demo">${demoBannerHtml}`);
 memberHtml = memberHtml.replace(/<div class="head">[\s\S]*?<\/div>\s*\n\s*<div class="stage">/, '<div class="stage">');
 memberHtml = memberHtml.replace(/\s*<div class="jump" id="jump"><\/div>/, '');
 memberHtml = memberHtml.replace(/\/\* screen jump[\s\S]*?\.hint\{[^}]+\}\n\n/, '');
@@ -133,5 +153,6 @@ fs.copyFileSync(path.join(root, 'public', 'favicon.svg'), path.join(out, 'favico
 fs.copyFileSync(path.join(root, 'public', 'robots.txt'), path.join(out, 'robots.txt'));
 fs.copyFileSync(path.join(root, 'public', 'admin.css'), path.join(out, 'admin.css'));
 fs.copyFileSync(path.join(root, 'public', 'analytics.js'), path.join(out, 'analytics.js'));
+fs.copyFileSync(path.join(root, 'public', 'demo-mobile.css'), path.join(out, 'demo-mobile.css'));
 
 console.log('Build complete → dist/');
