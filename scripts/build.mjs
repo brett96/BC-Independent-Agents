@@ -85,14 +85,20 @@ const demoBannerHtml = `
 
 const demoStyles = '<link rel="stylesheet" href="/demo-mobile.css">';
 
+function injectDemoStyles(html) {
+  if (html.includes('/demo-mobile.css')) return html;
+  return html.replace('</style>', `</style>\n${demoStyles}`);
+}
+
 let agentHtml = fs.readFileSync(path.join(root, 'agent-portal.html'), 'utf8');
 agentHtml = agentHtml.replace(
   '<title>BookCover — Workspace</title>',
   `<title>BookCover — Agent Workspace Demo</title>
 <meta name="description" content="Interactive demo of the BookCover agent workspace — HIPAA-safe Claude, client organization, and member inquiries.">
 <meta name="robots" content="noindex">
-<link rel="icon" href="/favicon.svg" type="image/svg+xml">${demoStyles}`
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">`
 );
+agentHtml = injectDemoStyles(agentHtml);
 agentHtml = agentHtml.replace(
   '<div class="topbar">',
   `<div class="topbar">
@@ -135,8 +141,9 @@ memberHtml = memberHtml.replace(
   `<title>Your HealthPlan Helper — Member App Demo</title>
 <meta name="description" content="Interactive demo of the BookCover white-labeled member app — plan help, agent messaging, and 24/7 assistance.">
 <meta name="robots" content="noindex">
-<link rel="icon" href="/favicon.svg" type="image/svg+xml">${demoStyles}`
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">`
 );
+memberHtml = injectDemoStyles(memberHtml);
 memberHtml = memberHtml.replace('<body>', `<body class="has-demo-banner member-demo">${demoBannerHtml}`);
 memberHtml = memberHtml.replace(/<div class="head">[\s\S]*?<\/div>\s*\n\s*<div class="stage">/, '<div class="stage">');
 memberHtml = memberHtml.replace(/\s*<div class="jump" id="jump"><\/div>/, '');

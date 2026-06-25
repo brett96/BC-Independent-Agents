@@ -36,22 +36,50 @@ body.has-demo-banner.member-demo {
   min-height: 100dvh;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  align-items: center;
+  box-sizing: border-box;
+  /* Override prototype body padding from member-app.html */
+  padding: calc(var(--demo-banner-h) + env(safe-area-inset-top, 0px) + 20px) 20px 32px;
 }
 body.has-demo-banner.member-demo .stage {
-  flex: 1;
+  flex: none;
   width: 100%;
-  min-height: 0;
+  max-width: 420px;
   display: flex;
   flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+/* Desktop / tablet: scale phone to fit viewport, allow scroll if needed */
+@media (min-width: 481px) {
+  body.has-demo-banner.member-demo {
+    overflow-x: hidden;
+    overflow-y: auto;
+    justify-content: flex-start;
+  }
+  body.has-demo-banner.member-demo .phone {
+    --phone-max-h: calc(100dvh - var(--demo-banner-h) - env(safe-area-inset-top, 0px) - 52px);
+    --phone-max-w: calc(100vw - 40px);
+    width: min(390px, var(--phone-max-w), calc(var(--phone-max-h) * 390 / 800));
+    height: min(800px, var(--phone-max-h), calc(var(--phone-max-w) * 800 / 390));
+    margin: 0 auto;
+    flex-shrink: 0;
+  }
 }
 
 @media (max-width: 480px) {
   body.has-demo-banner.member-demo {
+    overflow: hidden;
     padding: 0;
     padding-top: calc(var(--demo-banner-h) + env(safe-area-inset-top, 0px));
     align-items: stretch;
     background: var(--bg, #f5faf6);
+  }
+  body.has-demo-banner.member-demo .stage {
+    flex: 1;
+    max-width: none;
+    min-height: 0;
   }
   body.has-demo-banner.member-demo .demo-banner {
     font-size: 12px;
@@ -95,13 +123,7 @@ body.has-demo-banner.member-demo .stage {
 
 @media (min-width: 481px) and (max-width: 640px) {
   body.has-demo-banner.member-demo {
-    padding: 12px 12px 24px;
-    padding-top: calc(var(--demo-banner-h) + env(safe-area-inset-top, 0px) + 12px);
-  }
-  body.has-demo-banner.member-demo .phone {
-    width: min(390px, 100%);
-    height: min(800px, calc(100dvh - var(--demo-banner-h) - env(safe-area-inset-top, 0px) - 48px));
-    max-height: 860px;
+    padding: calc(var(--demo-banner-h) + env(safe-area-inset-top, 0px) + 16px) 16px 24px;
   }
 }
 
